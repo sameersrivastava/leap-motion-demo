@@ -41,30 +41,6 @@ Leap.loop(controllerOptions, function(frame) {
     return; // Skip this update
   }
 
-  // Display Frame object data
-  var frameOutput = document.getElementById("frameData");
-
-  var frameString = "Frame ID: " + frame.id  + "<br />"
-                  + "Timestamp: " + frame.timestamp + " &micro;s<br />"
-                  + "Hands: " + frame.hands.length + "<br />"
-                  + "Fingers: " + frame.fingers.length + "<br />"
-                  + "Tools: " + frame.tools.length + "<br />"
-                  + "Gestures: " + frame.gestures.length + "<br />";
-
-  // Frame motion factors
-  if (previousFrame && previousFrame.valid) {
-    var translation = frame.translation(previousFrame);
-    frameString += "Translation: " + vectorToString(translation) + " mm <br />";
-
-    var rotationAxis = frame.rotationAxis(previousFrame);
-    var rotationAngle = frame.rotationAngle(previousFrame);
-    frameString += "Rotation axis: " + vectorToString(rotationAxis, 2) + "<br />";
-    frameString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
-
-    var scaleFactor = frame.scaleFactor(previousFrame);
-    frameString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
-  }
-  frameOutput.innerHTML = "<div style='width:300px; float:left; padding:5px'>" + frameString + "</div>";
 
   // Display Hand object data
   var handOutput = document.getElementById("handData");
@@ -74,42 +50,7 @@ Leap.loop(controllerOptions, function(frame) {
       var hand = frame.hands[i];
 
       handString += "<div style='width:300px; float:left; padding:5px'>";
-      handString += "Hand ID: " + hand.id + "<br />";
-      handString += "Type: " + hand.type + " hand" + "<br />";
-      handString += "Direction: " + vectorToString(hand.direction, 2) + "<br />";
-      handString += "Palm position: " + vectorToString(hand.palmPosition) + " mm<br />";
       handString += "Grab strength: " + hand.grabStrength + "<br />";
-      handString += "Pinch strength: " + hand.pinchStrength + "<br />";
-      handString += "Confidence: " + hand.confidence + "<br />";
-      handString += "Arm direction: " + vectorToString(hand.arm.direction()) + "<br />";
-      handString += "Arm center: " + vectorToString(hand.arm.center()) + "<br />";
-      handString += "Arm up vector: " + vectorToString(hand.arm.basis[1]) + "<br />";
-
-      // Hand motion factors
-      if (previousFrame && previousFrame.valid) {
-        var translation = hand.translation(previousFrame);
-        handString += "Translation: " + vectorToString(translation) + " mm<br />";
-
-        var rotationAxis = hand.rotationAxis(previousFrame, 2);
-        var rotationAngle = hand.rotationAngle(previousFrame);
-        handString += "Rotation axis: " + vectorToString(rotationAxis) + "<br />";
-        handString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
-
-        var scaleFactor = hand.scaleFactor(previousFrame);
-        handString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
-      }
-
-      // IDs of pointables associated with this hand
-      if (hand.pointables.length > 0) {
-        var fingerIds = [];
-        for (var j = 0; j < hand.pointables.length; j++) {
-          var pointable = hand.pointables[j];
-            fingerIds.push(pointable.id);
-        }
-        if (fingerIds.length > 0) {
-          handString += "Fingers IDs: " + fingerIds.join(", ") + "<br />";
-        }
-      }
 
       handString += "</div>";
     }
@@ -125,37 +66,26 @@ Leap.loop(controllerOptions, function(frame) {
   if (frame.pointables.length > 0) {
     var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
     var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+   
+
+    var player1Move = checkRockPaperScissors(frame.pointables),
+        player2Move = makePlayer2Move();
+    
+    checkWinner(player1Move, player2Move);
+    togglePause();
+    //setTimeout(togglePause(), 10000);
     for (var i = 0; i < frame.pointables.length; i++) {
       var pointable = frame.pointables[i];
 
       pointableString += "<div style='width:250px; float:left; padding:5px'>";
 
       if (pointable.tool) {
-        pointableString += "Pointable ID: " + pointable.id + "<br />";
-        pointableString += "Classified as a tool <br />";
-        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
-        pointableString += "</div>";
+        pointableString = 'Not a finger';
       }
       else {
-        pointableString += "Pointable ID: " + pointable.id + "<br />";
-        pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
-        pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
-        pointableString += "Classified as a finger<br />";
-        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
         pointableString += "Extended?: "  + pointable.extended + "<br />";
-        pointable.bones.forEach( function(bone){
-          pointableString += boneTypeMap[bone.type] + " bone <br />";
-          pointableString += "Center: " + vectorToString(bone.center()) + "<br />";
-          pointableString += "Direction: " + vectorToString(bone.direction()) + "<br />";
-          pointableString += "Up vector: " + vectorToString(bone.basis[1]) + "<br />";
-        });
-        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
         pointableString += "</div>";
+
       }
     }
   }
@@ -163,50 +93,6 @@ Leap.loop(controllerOptions, function(frame) {
     pointableString += "<div>No pointables</div>";
   }
   pointableOutput.innerHTML = pointableString;
-
-  // Display Gesture object data
-  var gestureOutput = document.getElementById("gestureData");
-  var gestureString = "";
-  if (frame.gestures.length > 0) {
-    if (pauseOnGesture) {
-      togglePause();
-    }
-    for (var i = 0; i < frame.gestures.length; i++) {
-      var gesture = frame.gestures[i];
-      gestureString += "Gesture ID: " + gesture.id + ", "
-                    + "type: " + gesture.type + ", "
-                    + "state: " + gesture.state + ", "
-                    + "hand IDs: " + gesture.handIds.join(", ") + ", "
-                    + "pointable IDs: " + gesture.pointableIds.join(", ") + ", "
-                    + "duration: " + gesture.duration + " &micro;s, ";
-
-      switch (gesture.type) {
-        case "circle":
-          gestureString += "center: " + vectorToString(gesture.center) + " mm, "
-                        + "normal: " + vectorToString(gesture.normal, 2) + ", "
-                        + "radius: " + gesture.radius.toFixed(1) + " mm, "
-                        + "progress: " + gesture.progress.toFixed(2) + " rotations";
-          break;
-        case "swipe":
-          gestureString += "start position: " + vectorToString(gesture.startPosition) + " mm, "
-                        + "current position: " + vectorToString(gesture.position) + " mm, "
-                        + "direction: " + vectorToString(gesture.direction, 1) + ", "
-                        + "speed: " + gesture.speed.toFixed(1) + " mm/s";
-          break;
-        case "screenTap":
-        case "keyTap":
-          gestureString += "position: " + vectorToString(gesture.position) + " mm";
-          break;
-        default:
-          gestureString += "unkown gesture type";
-      }
-      gestureString += "<br />";
-    }
-  }
-  else {
-    gestureString += "No gestures";
-  }
-  gestureOutput.innerHTML = gestureString;
 
   // Store frame for motion functions
   previousFrame = frame;
@@ -239,15 +125,86 @@ function pauseForGestures() {
   }
 }
 
+function checkRockPaperScissors(pointables) {
+
+  const thumb = pointables[0],
+        index = pointables[1],
+        middle = pointables[2],
+        ring = pointables[3],
+        pinky = pointables[4];
+
+  if(index.extended && middle.extended) {
+    if(thumb.extended && ring.extended && pinky.extended){
+      console.log('paper');
+      document.getElementById('img-player1').src = 'paper.png'
+      return 'paper';
+    } else {
+      document.getElementById('img-player1').src = 'scissors.png'
+      console.log('scissors');
+      return 'scissors'
+    }
+  } else {
+    document.getElementById('img-player1').src = 'rock.png'
+    console.log('rock');
+    return 'rock';
+  }
+
+}
+
+function checkWinner(player1Move, player2Move) {
+  // 0 is tied, 1 is player1, 2 is player2
+  if(player1Move == player2Move) {
+    document.getElementById('result').innerText = 'Tied!';    
+    console.log('tied');
+    return 0;
+  }
+  if(player1Move == 'paper') {
+    if(player2Move == 'rock') {
+      document.getElementById('result').innerText = 'Player 1 Wins!';
+      return 1;
+    } else if(player2Move == 'scissors') {
+      document.getElementById('result').innerText = 'Player 2 Wins!';
+      return 2;
+    }
+  }
+  if(player1Move == 'scissors') {
+    if(player2Move == 'paper') {
+      document.getElementById('result').innerText = 'Player 1 Wins!';
+      return 1;
+    } else if(player2Move == 'rock') {
+      document.getElementById('result').innerText = 'Player 2 Wins!';
+      return 2;
+    }
+  }
+  if(player1Move == 'rock') {
+    if(player2Move == 'scissors') {
+      document.getElementById('result').innerText = 'Player 1 Wins!';
+      return 1;
+    } else if(player2Move == 'paper') {
+      document.getElementById('result').innerText = 'Player 2 Wins!';
+      return 2;
+    }
+  }
+}
+
+function makePlayer2Move(){
+   var moveType = ['paper','rock','scissors'],
+       move = moveType[Math.floor(Math.random() * (3))];
+   document.getElementById('img-player2').src = move + '.png'
+   return move;
+}
+
 </script>
 </head>
 <body>
 <h1>Leap Motion JavaScript Sample</h1>
 <div id="main">
+  <img id="img-player1">
+  <img id="img-player2">
+  <br />
+  <h1 id="result">No winner selected</h1>
   <button id="pause" onclick="togglePause()">Pause</button>
   <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
-  <h3>Frame data:</h3>
-  <div id="frameData"></div>
   <div style="clear:both;"></div>
   <h3>Hand data:</h3>
   <div id="handData"></div>
@@ -255,8 +212,6 @@ function pauseForGestures() {
   <h3>Finger and tool data:</h3>
   <div id="pointableData"></div>
   <div style="clear:both;"></div>
-  <h3>Gesture data:</h3>
-  <div id="gestureData"></div>
 </div>
 </body>
 </html>
