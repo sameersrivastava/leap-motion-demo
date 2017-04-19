@@ -22,7 +22,8 @@ See additional libraries, guides, and examples at:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Leap Motion JavaScript Sample</title>
+<title>Leap Motion: Rock Paper Scissors</title>
+<link href="main.css" type="text/css" rel ="stylesheet">
 <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
 <script>
 // Store frame for motion functions
@@ -66,14 +67,13 @@ Leap.loop(controllerOptions, function(frame) {
   if (frame.pointables.length > 0) {
     var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
     var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
-   
+
 
     var player1Move = checkRockPaperScissors(frame.pointables),
         player2Move = makePlayer2Move();
-    
+
     checkWinner(player1Move, player2Move);
     togglePause();
-    //setTimeout(togglePause(), 10000);
     for (var i = 0; i < frame.pointables.length; i++) {
       var pointable = frame.pointables[i];
 
@@ -154,7 +154,7 @@ function checkRockPaperScissors(pointables) {
 function checkWinner(player1Move, player2Move) {
   // 0 is tied, 1 is player1, 2 is player2
   if(player1Move == player2Move) {
-    document.getElementById('result').innerText = 'Tied!';    
+    document.getElementById('result').innerText = 'Tied!';
     console.log('tied');
     return 0;
   }
@@ -196,22 +196,23 @@ function makePlayer2Move(){
 
 </script>
 </head>
+
 <body>
-<h1>Leap Motion JavaScript Sample</h1>
-<div id="main">
-  <img id="img-player1">
-  <img id="img-player2">
-  <br />
-  <h1 id="result">No winner selected</h1>
-  <button id="pause" onclick="togglePause()">Pause</button>
-  <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
-  <div style="clear:both;"></div>
-  <h3>Hand data:</h3>
-  <div id="handData"></div>
-  <div style="clear:both;"></div>
-  <h3>Finger and tool data:</h3>
-  <div id="pointableData"></div>
-  <div style="clear:both;"></div>
-</div>
+  <h1>Leap Motion: Rock Paper Scissors</h1>
+  <div id="main">
+    <img id="img-player1">
+    <img id="img-player2">
+    <br />
+    <h1 id="result">No winner selected</h1>
+    <button id="pause" class="btn btn-2 btn-2i" onclick="togglePause()">Pause</button>
+    <!-- <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input> -->
+    <div style="clear:both;"></div>
+    <h3>Hand data:</h3>
+    <div id="handData"></div>
+    <div style="clear:both;"></div>
+    <h3>Finger and tool data:</h3>
+    <div id="pointableData"></div>
+    <div style="clear:both;"></div>
+  </div>
 </body>
 </html>
