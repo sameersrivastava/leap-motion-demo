@@ -3,11 +3,17 @@
 body {
     font-family:"Karla", Helvetica, Arial;
     font-weight: 400;
-    color: rgb(30,30,30);
+    /*color: rgb(30,30,30);*/
+    color: rgb(255,255,255);
+    background: #80b4ba;
 }
 
 h1 {
   font-weight: 700;
+  text-align: center;
+}
+
+h2 {
   text-align: center;
 }
 
@@ -67,4 +73,8 @@ h1 {
 .btn-2i:active {
 	box-shadow: 0 0 #ab3c3c;
 	top: 6px;
+}
+
+#img-player1 {
+  margin-left: 30%;
 }
